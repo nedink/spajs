@@ -1,8 +1,12 @@
+import Dashboard from './views/Dashboard.js'
+import Posts from './views/Posts.js'
+import Settings from './views/Settings.js'
+
 const router = async () => {
     const routes = [
-        { path: '/', view: () => console.log('Viewing Dashboard') },
-        { path: '/posts', view: () => console.log('Viewing Posts') },
-        { path: '/settings', view: () => console.log('Viewing Settings') },
+        { path: '/', view: Dashboard },
+        { path: '/posts', view: Posts },
+        { path: '/settings', view: Settings },
     ]
 
     // Test each route for potential match
@@ -23,9 +27,25 @@ const router = async () => {
         }
     }
 
-    console.log(match.route.view())
+    const view = new match.route.view()
+
+    document.querySelector('#app').innerHTML = await view.getHtml()
 }
 
+const navigateTo = url => {
+    history.pushState(null, null, url)
+    router()
+}
+
+window.addEventListener('popstate', router)
+
 document.addEventListener('DOMContentLoaded', () => {
+    document.body.addEventListener('click', e => {
+        if (e.target.matches('[data-link]')) {
+            e.preventDefault()
+            navigateTo(e.target.href) // Use our custom navigation behavior taking advantage of the history API
+        }
+    })
+
     router()
 })
