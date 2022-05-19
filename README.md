@@ -35,10 +35,55 @@
 
     const app = express()
 
-    // for any path, go to the root and send back index.html
+    // For any path, go to the root and send back index.html
     app.get('/*', (req, res) => {
-        res.sendFile(path.resolve('frontend', 'index.html'))
+        res.sendFile(path.resolve(__dirname, 'frontend', 'index.html'))
     })
 
     listener = app.listen(process.env.PORT || 3000, () => console.log(`Server running on port ${listener.address().port}`))
+    ```
+9. Create `root/static/js/index.js`:
+    ```js
+    console.log('JS is loaded!')
+    ```
+10. Whenever the path has '/static' in it, we want to serve the static dir as usual. This will enable `index.js` which we just created. Add to `server.js`:
+    ```js
+    app.use('/static', express.static(path.resolve(__dirname, 'frontend', 'static')))
+    ```
+    Now, if you go to `localhost:3000/` in the browser and check the console, you should see `JS is loaded!`
+    ![ScreenShot1.png](misc/ScreenShot1.png)
+11. In `server.js`, let's set up routing. Add the following:
+    ```js
+    const router = async () => {
+        const routes = [
+            { path: '/', view: () => console.log('Viewing Dashboard') },
+            { path: '/posts', view: () => console.log('Viewing Posts') },
+            { path: '/settings', view: () => console.log('Viewing Settings') },
+        ]
+
+        // Test each route for potential match
+        const potentialMatches = routes.map(route => {
+            return {
+                route: route,
+                isMatch: location.pathname === route.path
+            }
+        })
+
+        let match = potentialMatches.find(potentialMatch => potentialMatch.isMatch)
+
+        // No matches, let's just go to dashboard
+        if (!match) {
+            match = {
+                route: routes[0],
+                isMatch: true
+            }
+        }
+
+        // Check that we know what view we should see
+        console.log(match.route.view())
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        router()
+    })
     ```
